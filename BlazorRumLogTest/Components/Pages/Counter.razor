@@ -1,6 +1,7 @@
 ﻿@page "/counter"
 @using Elastic.Apm
 @rendermode InteractiveServer
+@inject ILogger<Counter> Logger
 
 <PageTitle>Counter</PageTitle>
 
@@ -13,8 +14,21 @@
 @code {
     private int currentCount = 0;
 
+     protected override void OnInitialized()
+    {
+        // 구조화된 로깅 - Kibana에서 필드별 검색 가능
+        Logger.LogInformation("Counter component initialized at {InitTime} for user {UserId}", 
+            DateTime.UtcNow, "anonymous");
+    }
+
     private async Task IncrementCount()
     {
+        var oldCount = currentCount;
+
+        // 구조화된 로그 - 키바나에서 필드로 필터링 가능
+        Logger.LogInformation("Counter incremented: {Action} from {OldValue} to {NewValue} by user {UserId}",
+            "button_click", oldCount, currentCount, "anonymous");
+
         // 최신 방법으로 트랜잭션 생성
         var transaction = Agent.Tracer.StartTransaction("counter-increment", "user-action");
         try
@@ -25,6 +39,14 @@
             {
                 await Task.Delay(10);
                 currentCount++;
+
+                // 조건부 로깅
+                if (currentCount % 10 == 0)
+                {
+                    Logger.LogWarning("Counter milestone reached: {Count} at {Timestamp}",
+                        currentCount, DateTime.UtcNow);
+                }
+
 
                 // 스팬에 라벨 추가
                 span.SetLabel("increment_value", 1);
