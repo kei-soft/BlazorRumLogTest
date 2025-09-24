@@ -1,0 +1,52 @@
+﻿@page "/counter"
+@using Elastic.Apm
+@rendermode InteractiveServer
+
+<PageTitle>Counter</PageTitle>
+
+<h1>Counter</h1>
+
+<p role="status">Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+@code {
+    private int currentCount = 0;
+
+    private async Task IncrementCount()
+    {
+        // 최신 방법으로 트랜잭션 생성
+        var transaction = Agent.Tracer.StartTransaction("counter-increment", "user-action");
+        try
+        {
+            // 커스텀 스팬 생성
+            var span = transaction.StartSpan("counter-calculation", "computation");
+            try
+            {
+                await Task.Delay(10);
+                currentCount++;
+
+                // 스팬에 라벨 추가
+                span.SetLabel("increment_value", 1);
+                span.SetLabel("current_count", currentCount);
+            }
+            finally
+            {
+                span.End();
+            }
+
+            // 트랜잭션에 결과 설정
+            transaction.Result = "success";
+        }
+        catch (Exception ex)
+        {
+            transaction.CaptureException(ex);
+            transaction.Result = "error";
+            throw;
+        }
+        finally
+        {
+            transaction.End();
+        }
+    }
+}

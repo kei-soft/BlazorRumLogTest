@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <link rel="stylesheet" href="@Assets["lib/bootstrap/dist/css/bootstrap.min.css"]" />
+    <link rel="stylesheet" href="@Assets["app.css"]" />
+    <link rel="stylesheet" href="@Assets["BlazorRumLogTest.styles.css"]" />
+    <ImportMap />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <HeadOutlet />
+</head>
+
+<body>
+    <Routes />
+    <script src="_framework/blazor.web.js"></script>
+    <script src="https://cdn.elastic.co/agents/rum/latest/elastic-apm-rum.umd.min.js"></script>
+    <script>
+        elasticApm.init({
+          serviceName: 'blazor-client',
+          serverUrl: 'http://localhost:18200',
+          environment: 'development',
+          distributedTracingOrigins: ["https://localhost:7033"], // Blazor SSR 서버 주소
+          pageLoadTraceId: true
+        })
+    </script>
+</body>
+
+</html>
